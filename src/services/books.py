@@ -1,6 +1,5 @@
 __all__ = ["BookService"]
 
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,48 +12,36 @@ class BookService:
         self.session = session
 
     async def add_book(self, book: IncomingBook) -> Book:
-        # это - бизнес логика. Обрабатываем данные, сохраняем, преобразуем и т.д.
         new_book = Book(
-            **{
-                "title": book.title,
-                "author": book.author,
-                "year": book.year,
-                "pages": book.pages,
-            }
+            title=book.title,
+            author=book.author,
+            year=book.year,
+            pages=book.pages,
+            seller_id=book.seller_id,
         )
-
         self.session.add(new_book)
         await self.session.flush()
-
         return new_book
 
     async def delete_book(self, book_id: int) -> bool:
         book = await self.session.get(Book, book_id)
-
         if book:
             await self.session.delete(book)
             return True
-
-        else:
-            return False
+        return False
 
     async def update_book(self, book_id: int, new_book_data: ReturnedBook) -> Book | None:
-        # book = fake_storage.get(book_id, None)
-        # if book:
-        # Оператор "морж", позволяющий одновременно и присвоить значение и проверить его. Заменяет то, что закомментировано выше.
         if updated_book := await self.session.get(Book, book_id):
             updated_book.title = new_book_data.title
             updated_book.author = new_book_data.author
             updated_book.pages = new_book_data.pages
             updated_book.year = new_book_data.year
-
+            updated_book.seller_id = new_book_data.seller_id
             await self.session.flush()
-
             return updated_book
 
     async def partial_update_book(self, book_id: int, patched_book: PatchBook) -> Book | None:
         if book := await self.session.get(Book, book_id):
-
             if patched_book.title is not None and patched_book.title != book.title:
                 book.title = patched_book.title
             if patched_book.author is not None and patched_book.author != book.author:
@@ -63,6 +50,8 @@ class BookService:
                 book.year = patched_book.year
             if patched_book.pages is not None and patched_book.pages != book.pages:
                 book.pages = patched_book.pages
+            if patched_book.seller_id is not None and patched_book.seller_id != book.seller_id:
+                book.seller_id = patched_book.seller_id
 
             await self.session.flush()
             return book
@@ -71,10 +60,6 @@ class BookService:
         return await self.session.get(Book, book_id)
 
     async def get_all_books(self) -> list[Book]:
-        # Хотим видеть формат
-        # books: [{"id": 1, "title": "blabla", ...., "year": 2023},{...}]
-
-        query = select(Book)  # SELECT * FROM boocs_table;
-        result = await self.session.execute(query)  # await session.execute(select(Book))
-
+        query = select(Book)
+        result = await self.session.execute(query)
         return result.scalars().all()
