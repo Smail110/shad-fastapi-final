@@ -1,59 +1,138 @@
-# Набор тестов для эндпоинтов которые можно запустить
-# в VSCode с помощью плагина  REST Client
-# Найти можно по идентификатору: humao.rest-client
-# Tunder Client не позволяет свободно импортировать-экспортировать записи,
-# поэтому перешел на этот плагин. Он тоже хорош :-)
+# REST Client requests for book marketplace
+# Extension: humao.rest-client
 
-# Создаем книгу
-POST http://localhost:8000/api/v1/books/ HTTP/1.1
-Content-Type: application/json
+@host = http://localhost:8000
+@contentType = application/json
+
+###
+# 1. Регистрация продавца
+POST {{host}}/api/v1/seller/ HTTP/1.1
+Content-Type: {{contentType}}
 
 {
-    "title": "Clean Architecture",
-    "author": " Robert Martin",
-    "count_pages": 300,
-    "year": 2025
+  "first_name": "Ivan",
+  "last_name": "Petrov",
+  "e_mail": "ivan@example.com",
+  "password": "123456"
 }
 
 ###
-
-# Получаем список книг
-GET http://localhost:8000/api/v1/books/ HTTP/1.1
-
-###
-
-# Получаем одну книгу по ее ИД
-GET http://localhost:8000/api/v1/books/1 HTTP/1.1
+# 2. Получить список всех продавцов
+GET {{host}}/api/v1/seller/ HTTP/1.1
 
 ###
-
-# Удаляем книгу
-DELETE http://localhost:8000/api/v1/books/1 HTTP/1.1
-
-###
-
-# Обновляем поля в данных о книге
-PUT http://localhost:8000/api/v1/books/1 HTTP/1.1
-Content-Type: application/json
+# 3. Получить JWT токен
+# Скопируйте access_token из ответа
+POST {{host}}/api/v1/token/ HTTP/1.1
+Content-Type: {{contentType}}
 
 {
-    "id": 1,
-    "title": "Clean Code",
-    "author": "Robert Martin",
-    "year": 2022,
-    "pages": 310
+  "e_mail": "ivan@example.com",
+  "password": "123456"
 }
 
 ###
+# 4. Получить конкретного продавца по id
+# Вставьте токен вместо YOUR_TOKEN
+GET {{host}}/api/v1/seller/1 HTTP/1.1
+Authorization: Bearer YOUR_TOKEN
 
-
-# Обновляем поля в данных о книге
-PATCH http://localhost:8000/api/v1/books/1 HTTP/1.1
-Content-Type: application/json
+###
+# 5. Обновить продавца
+PUT {{host}}/api/v1/seller/1 HTTP/1.1
+Content-Type: {{contentType}}
 
 {
-    "title": "Mziri",
-    "pages": 310
+  "first_name": "IvanUpdated",
+  "last_name": "PetrovUpdated",
+  "e_mail": "ivan_updated@example.com"
 }
 
 ###
+# 6. Создать книгу
+# Вставьте токен вместо YOUR_TOKEN
+POST {{host}}/api/v1/books/ HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "title": "Clean Architecture",
+  "author": "Robert Martin",
+  "count_pages": 300,
+  "year": 2025,
+  "seller_id": 1
+}
+
+###
+# 7. Получить список всех книг
+GET {{host}}/api/v1/books/ HTTP/1.1
+
+###
+# 8. Получить одну книгу по id
+GET {{host}}/api/v1/books/1 HTTP/1.1
+
+###
+# 9. Полностью обновить книгу
+# Вставьте токен вместо YOUR_TOKEN
+PUT {{host}}/api/v1/books/1 HTTP/1.1
+Content-Type: {{contentType}}
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "id": 1,
+  "title": "Clean Code",
+  "author": "Robert Martin",
+  "year": 2025,
+  "pages": 310,
+  "seller_id": 1
+}
+
+###
+# 10. Частично обновить книгу
+PATCH {{host}}/api/v1/books/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "title": "Refactored Book Title",
+  "pages": 320
+}
+
+###
+# 11. Удалить книгу
+DELETE {{host}}/api/v1/books/1 HTTP/1.1
+
+###
+# 12. Удалить продавца
+# Вместе с продавцом должны удалиться и его книги
+DELETE {{host}}/api/v1/seller/1 HTTP/1.1
+
+###
+# 13. Проверка: получить несуществующую книгу после удаления
+GET {{host}}/api/v1/books/1 HTTP/1.1
+
+###
+# 14. Проверка: получить токен с неверным паролем
+POST {{host}}/api/v1/token/ HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "e_mail": "ivan@example.com",
+  "password": "wrong_password"
+}
+
+###
+# 15. Проверка: создать книгу без токена
+POST {{host}}/api/v1/books/ HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "title": "Unauthorized Book",
+  "author": "Unknown",
+  "count_pages": 100,
+  "year": 2025,
+  "seller_id": 1
+}
+
+###
+# 16. Проверка: получить продавца без токена
+GET {{host}}/api/v1/seller/1 HTTP/1.1
